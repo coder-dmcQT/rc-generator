@@ -21,11 +21,6 @@ pub fn find_exported_functions(context: &mut Context) -> Result<Vec<String>, Str
             continue;
         }
 
-        // Check if it starts with "export_"
-        if !name.starts_with("export_") {
-            continue;
-        }
-
         let value = global
             .get(key, context)
             .map_err(|e| format!("Failed to get value: {}", e))?;
