@@ -65,15 +65,15 @@ fn main() {
     match execute_exported_functions(&js_code, &content, &js_file_str) {
         Ok(results) => {
             let (success_results, failure_results) = results;
-            if success_results.len() * failure_results.len() == 0 {
-                println!("⚠️ No functions were exported.");
+            if success_results.len() + failure_results.len() == 0 {
+                println!("‼️ No functions were exported.");
                 return;
             }
-            println!("✅ Executed function(s):\n");
+            println!(" ✅ Executed function(s):\n");
             for success in success_results {
-                println!(" function name: {} with path {}", success.name, success.path);
+                println!("\tfunction name: {} with path {}", success.name, success.path);
             }
-            println!("❌ Errored function(s):\n");
+            println!("\n ❌ Errored function(s):\n");
             for fail in failure_results {
                 println!(" function name: {} with path {} and error {}", fail.name, fail.path, fail.error);
             }
