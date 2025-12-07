@@ -1,7 +1,7 @@
-use boa_engine::{Context, Source};
 use crate::core::call_func::call_function;
 use crate::core::data_struct::FunctionResult;
 use crate::core::find_exported_functions::find_exported_functions;
+use boa_engine::{Context, Source};
 
 /// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
@@ -25,11 +25,18 @@ pub fn execute_exported_functions(
 
     // Call each exported function with the content
     let mut results = Vec::new();
-    for func_name in exported_functions {
-        let result = call_function(&mut context, &func_name, content);
+    for func_item in exported_functions {
+        let function_name = func_item.function_name;
+        let target_path = if func_item.path.is_empty() {
+            "."
+        } else {
+            func_item.path.as_str()
+        };
+        let result = call_function(&mut context, &function_name, content);
         results.push(FunctionResult {
-            name: func_name,
+            name: function_name,
             result,
+            path: target_path.to_string(),
         });
     }
 

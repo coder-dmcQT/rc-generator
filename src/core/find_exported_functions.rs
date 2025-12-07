@@ -1,8 +1,9 @@
 use boa_engine::property::PropertyKey;
 use boa_engine::{Context, JsString};
+use crate::core::data_struct::{FunctionForExecute};
 use crate::core::built_in_filter::is_builtin;
 
-pub fn find_exported_functions(context: &mut Context) -> Result<Vec<String>, String> {
+pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForExecute>, String> {
     let global = context.global_object();
     let mut exported = Vec::new();
 
@@ -30,14 +31,19 @@ pub fn find_exported_functions(context: &mut Context) -> Result<Vec<String>, Str
         if value.is_callable() {
             let value_obj = value.as_object().unwrap();
 
+            let mut current_value = FunctionForExecute{
+                path: "".to_string(), function_name: name
+            };
+
             let has_property = value_obj
-                .has_own_property(PropertyKey::String(JsString::from("path")), context)
+                .get(PropertyKey::String(JsString::from("path")), context)
                 .map_err(|e| format!("Failed to get property: {}", e))?;
-            if has_property {
+            if has_property.is_string() {
                 println!("has path props!");
+                current_value.path = has_property.to_string(context).unwrap().to_std_string_escaped();
             }
 
-            exported.push(name);
+            exported.push(current_value);
         }
     }
 

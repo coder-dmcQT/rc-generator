@@ -20,4 +20,11 @@ pub struct Args {
 pub struct FunctionResult {
     pub name: String,
     pub result: Result<String, String>,
+    pub path: String,
+}
+
+#[derive(Debug)]
+pub struct FunctionForExecute {
+    pub function_name: String,
+    pub path: String,
 }
