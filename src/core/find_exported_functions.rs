@@ -34,18 +34,14 @@ pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForE
             let mut current_value = FunctionForExecute {
                 path: "".to_string(),
                 function_name: name,
-                lang: "".to_string(),
             };
 
             let has_property = get_property(value_obj, "path", context);
             if !has_property.is_empty() {
                 current_value.path = has_property
                     .to_string()
-            }
-
-            let has_lang = get_property(value_obj, "lang", context);
-            if !has_lang.is_empty() {
-                current_value.lang = has_lang
+            } else {
+                continue;
             }
 
             exported.push(current_value);

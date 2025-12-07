@@ -37,11 +37,7 @@ pub fn execute_exported_functions(
     // Call each exported function with the content
     for func_item in exported_functions {
         let function_name = func_item.function_name;
-        let target_path = if func_item.path.is_empty() {
-            normalize_path(&current_path_dir.join(format!("{}.{}", function_name, func_item.lang)))
-                .to_string_lossy()
-                .to_string()
-        } else {
+        let target_path =  {
             normalize_path(&current_path_dir.join(func_item.path))
                 .to_string_lossy()
                 .to_string()

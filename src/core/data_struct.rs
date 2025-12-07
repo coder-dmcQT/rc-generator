@@ -32,5 +32,4 @@ pub struct FailureResult {
 pub struct FunctionForExecute {
     pub function_name: String,
     pub path: String,
-    pub lang: String,
 }
