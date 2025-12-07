@@ -1,7 +1,7 @@
 use crate::core::built_in_filter::is_builtin;
 use crate::core::data_struct::FunctionForExecute;
 use boa_engine::property::PropertyKey;
-use boa_engine::{Context, JsObject, JsResult, JsString, JsValue};
+use boa_engine::{Context, JsObject, JsString, JsValue};
 
 pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForExecute>, String> {
     let global = context.global_object();

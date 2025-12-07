@@ -1,8 +1,8 @@
-use std::path::{Path, PathBuf};
 use crate::core::call_func::call_function;
 use crate::core::data_struct::FunctionResult;
 use crate::core::find_exported_functions::find_exported_functions;
 use boa_engine::{Context, Source};
+use std::path::PathBuf;
 
 /// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
