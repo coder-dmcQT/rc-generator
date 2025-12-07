@@ -1,5 +1,5 @@
 use crate::core::call_func::call_function;
-use crate::core::data_struct::{ExecutionOutcome, FunctionResult};
+use crate::core::data_struct::{SuccessResult, FailureResult};
 use crate::core::find_exported_functions::find_exported_functions;
 use boa_engine::{Context, Source};
 use std::path::PathBuf;
@@ -11,7 +11,7 @@ pub fn execute_exported_functions(
     js_code: &str,
     content: &str,
     js_file_str: &str,
-) -> Result<Vec<FunctionResult>, String> {
+) -> Result<(Vec<SuccessResult>, Vec<FailureResult>), String> {
     // Create JavaScript context
     let mut context = Context::default();
 
@@ -23,8 +23,11 @@ pub fn execute_exported_functions(
     // Find all functions with "export_" prefix
     let exported_functions = find_exported_functions(&mut context)?;
 
+    let mut successes = Vec::new();
+    let mut failures = Vec::new();
+
     if exported_functions.is_empty() {
-        return Ok(Vec::new());
+        return Ok((successes, failures));
     }
 
     // Store the temporary parent dir
@@ -32,7 +35,6 @@ pub fn execute_exported_functions(
     let current_path_dir = current_path.parent().unwrap();
 
     // Call each exported function with the content
-    let mut results = Vec::new();
     for func_item in exported_functions {
         let function_name = func_item.function_name;
         let target_path = if func_item.path.is_empty() {
@@ -47,21 +49,20 @@ pub fn execute_exported_functions(
         let result = call_function(&mut context, &function_name, content);
         match handle_file(&*target_path, result?.as_str()) {
             Ok(_result) => {
-                results.push(FunctionResult {
+                successes.push(SuccessResult {
                     name: function_name,
-                    result: ExecutionOutcome::Success("Done!".parse().unwrap()),
                     path: target_path.to_string(),
                 });
             },
             Err(e) => {
-                results.push(FunctionResult {
+                failures.push(FailureResult {
                     name: function_name,
-                    result: ExecutionOutcome::Failure(e.to_string()),
+                    error: e.to_string(),
                     path: target_path.to_string(),
                 });
             }
         };
     }
 
-    Ok(results)
+    Ok((successes, failures))
 }

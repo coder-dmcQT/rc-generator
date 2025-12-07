@@ -1,6 +1,6 @@
 pub(crate) mod core;
 
-use crate::core::data_struct::{Args, ExecutionOutcome};
+use crate::core::data_struct::Args;
 use crate::core::execute_exported_function::execute_exported_functions;
 use crate::core::print_console::{print_content_required, print_js_required};
 use clap::Parser;
@@ -64,20 +64,18 @@ fn main() {
     // Execute exported functions
     match execute_exported_functions(&js_code, &content, &js_file_str) {
         Ok(results) => {
-            if results.is_empty() {
-                println!("⚠️  No functions for execution found");
-            } else {
-                println!("✅ Executed {} function(s):\n", results.len());
-                for func_result in results {
-                    match func_result.result {
-                        ExecutionOutcome::Success(_result) => {
-                            println!("  • {} path is {}", func_result.name, func_result.path);
-                        }
-                        ExecutionOutcome::Failure(_result) => {
-                            println!("  • {} => Error: {}", func_result.name, func_result.path);
-                        }
-                    }
-                }
+            let (success_results, failure_results) = results;
+            if success_results.len() * failure_results.len() == 0 {
+                println!("⚠️ No functions were exported.");
+                return;
+            }
+            println!("✅ Executed function(s):\n");
+            for success in success_results {
+                println!(" function name: {} with path {}", success.name, success.path);
+            }
+            println!("❌ Errored function(s):\n");
+            for fail in failure_results {
+                println!(" function name: {} with path {} and error {}", fail.name, fail.path, fail.error);
             }
         }
         Err(e) => {

@@ -15,17 +15,16 @@ pub struct Args {
     #[arg(value_name = "ARGS")]
     pub positional: Vec<String>,
 }
-
 #[derive(Debug)]
-pub enum ExecutionOutcome {
-    Success(String),  // 成功，携带结果字符串
-    Failure(String),  // 失败，携带错误信息字符串
+pub struct SuccessResult {
+    pub name: String,
+    pub path: String,
 }
 
 #[derive(Debug)]
-pub struct FunctionResult {
+pub struct FailureResult {
     pub name: String,
-    pub result: ExecutionOutcome,
+    pub error: String,  // 仅存错误信息
     pub path: String,
 }
 
