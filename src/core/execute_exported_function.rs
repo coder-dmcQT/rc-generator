@@ -3,6 +3,7 @@ use crate::core::data_struct::FunctionResult;
 use crate::core::find_exported_functions::find_exported_functions;
 use boa_engine::{Context, Source};
 use std::path::PathBuf;
+use crate::core::normalize_path::normalize_path;
 
 /// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
@@ -34,17 +35,11 @@ pub fn execute_exported_functions(
     for func_item in exported_functions {
         let function_name = func_item.function_name;
         let target_path = if func_item.path.is_empty() {
-            current_path_dir
-                .join(format!("{}.{}", function_name, func_item.lang))
-                .canonicalize()
-                .unwrap()
+            normalize_path(&current_path_dir.join(format!("{}.{}", function_name, func_item.lang)))
                 .to_string_lossy()
                 .to_string()
         } else {
-            current_path_dir
-                .join(func_item.path)
-                .canonicalize()
-                .unwrap()
+            normalize_path(&current_path_dir.join(func_item.path))
                 .to_string_lossy()
                 .to_string()
         };
