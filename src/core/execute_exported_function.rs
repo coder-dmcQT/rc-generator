@@ -1,9 +1,10 @@
 use crate::core::call_func::call_function;
-use crate::core::data_struct::FunctionResult;
+use crate::core::data_struct::{ExecutionOutcome, FunctionResult};
 use crate::core::find_exported_functions::find_exported_functions;
 use boa_engine::{Context, Source};
 use std::path::PathBuf;
 use crate::core::normalize_path::normalize_path;
+use crate::core::handle_file::handle_file;
 
 /// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
@@ -44,11 +45,22 @@ pub fn execute_exported_functions(
                 .to_string()
         };
         let result = call_function(&mut context, &function_name, content);
-        results.push(FunctionResult {
-            name: function_name,
-            result,
-            path: target_path.to_string(),
-        });
+        match handle_file(&*target_path, result?.as_str()) {
+            Ok(_result) => {
+                results.push(FunctionResult {
+                    name: function_name,
+                    result: ExecutionOutcome::Success("Done!".parse().unwrap()),
+                    path: target_path.to_string(),
+                });
+            },
+            Err(e) => {
+                results.push(FunctionResult {
+                    name: function_name,
+                    result: ExecutionOutcome::Failure(e.to_string()),
+                    path: target_path.to_string(),
+                });
+            }
+        };
     }
 
     Ok(results)

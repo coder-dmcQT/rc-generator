@@ -1,6 +1,6 @@
 pub(crate) mod core;
 
-use crate::core::data_struct::Args;
+use crate::core::data_struct::{Args, ExecutionOutcome};
 use crate::core::execute_exported_function::execute_exported_functions;
 use crate::core::print_console::{print_content_required, print_js_required};
 use clap::Parser;
@@ -70,11 +70,11 @@ fn main() {
                 println!("✅ Executed {} function(s):\n", results.len());
                 for func_result in results {
                     match func_result.result {
-                        Ok(value) => {
-                            println!("  • {} => {} path is {}", func_result.name, value, func_result.path);
+                        ExecutionOutcome::Success(_result) => {
+                            println!("  • {} path is {}", func_result.name, func_result.path);
                         }
-                        Err(error) => {
-                            println!("  • {} => Error: {}", func_result.name, error);
+                        ExecutionOutcome::Failure(_result) => {
+                            println!("  • {} => Error: {}", func_result.name, func_result.path);
                         }
                     }
                 }

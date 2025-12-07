@@ -17,9 +17,15 @@ pub struct Args {
 }
 
 #[derive(Debug)]
+pub enum ExecutionOutcome {
+    Success(String),  // 成功，携带结果字符串
+    Failure(String),  // 失败，携带错误信息字符串
+}
+
+#[derive(Debug)]
 pub struct FunctionResult {
     pub name: String,
-    pub result: Result<String, String>,
+    pub result: ExecutionOutcome,
     pub path: String,
 }
 
