@@ -1,7 +1,7 @@
-use boa_engine::property::PropertyKey;
-use boa_engine::{Context, JsString};
-use crate::core::data_struct::{FunctionForExecute};
 use crate::core::built_in_filter::is_builtin;
+use crate::core::data_struct::FunctionForExecute;
+use boa_engine::property::PropertyKey;
+use boa_engine::{Context, JsObject, JsResult, JsString, JsValue};
 
 pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForExecute>, String> {
     let global = context.global_object();
@@ -31,16 +31,21 @@ pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForE
         if value.is_callable() {
             let value_obj = value.as_object().unwrap();
 
-            let mut current_value = FunctionForExecute{
-                path: "".to_string(), function_name: name
+            let mut current_value = FunctionForExecute {
+                path: "".to_string(),
+                function_name: name,
+                lang: "".to_string(),
             };
 
-            let has_property = value_obj
-                .get(PropertyKey::String(JsString::from("path")), context)
-                .map_err(|e| format!("Failed to get property: {}", e))?;
-            if has_property.is_string() {
-                println!("has path props!");
-                current_value.path = has_property.to_string(context).unwrap().to_std_string_escaped();
+            let has_property = get_property(value_obj, "path", context);
+            if !has_property.is_empty() {
+                current_value.path = has_property
+                    .to_string()
+            }
+
+            let has_lang = get_property(value_obj, "lang", context);
+            if !has_lang.is_empty() {
+                current_value.lang = has_lang
             }
 
             exported.push(current_value);
@@ -50,4 +55,14 @@ pub fn find_exported_functions(context: &mut Context) -> Result<Vec<FunctionForE
     Ok(exported)
 }
 
-
+fn get_property(object: &JsObject, name: &str, context: &mut Context) -> String {
+    let property = object
+        .get(PropertyKey::String(JsString::from(name)), context)
+        .map_err(|e| format!("Failed to get property: {}", e)).unwrap();
+    let value = if property.is_string() {
+        property
+    } else {
+        JsValue::from(JsString::from(""))
+    };
+    value.to_string(context).unwrap().to_std_string_escaped()
+}

@@ -1,4 +1,4 @@
 function print(a) {
     return a.split(',')
 }
-print.path="you-guess!"
+print.path="you-guess.txt"

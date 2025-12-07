@@ -24,6 +24,17 @@ fn main() {
         }
     };
 
+    // Convert to absolute path
+    let js_file_absolute = match fs::canonicalize(&js_file) {
+        Ok(abs_path) => abs_path,
+        Err(e) => {
+            eprintln!("Error: Cannot find JavaScript file '{}': {}", js_file, e);
+            std::process::exit(1);
+        }
+    };
+
+    let js_file_str = js_file_absolute.to_string_lossy().to_string();
+
     let content_file = match content_file {
         Some(path) => path,
         None => {
@@ -36,7 +47,7 @@ fn main() {
     let js_code = match fs::read_to_string(&js_file) {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("Error reading JavaScript file '{}': {}", js_file, e);
+            eprintln!("Error reading JavaScript file '{}': {} File path is {}", js_file, e, js_file_str);
             std::process::exit(1);
         }
     };
@@ -51,16 +62,16 @@ fn main() {
     };
 
     // Execute exported functions
-    match execute_exported_functions(&js_code, &content) {
+    match execute_exported_functions(&js_code, &content, &js_file_str) {
         Ok(results) => {
             if results.is_empty() {
-                println!("⚠️  No functions with 'export_' prefix found");
+                println!("⚠️  No functions for execution found");
             } else {
                 println!("✅ Executed {} function(s):\n", results.len());
                 for func_result in results {
                     match func_result.result {
                         Ok(value) => {
-                            println!("  • {} => {}", func_result.name, value);
+                            println!("  • {} => {} path is {}", func_result.name, value, func_result.path);
                         }
                         Err(error) => {
                             println!("  • {} => Error: {}", func_result.name, error);
