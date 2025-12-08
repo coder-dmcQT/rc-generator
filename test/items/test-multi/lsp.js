@@ -3,10 +3,11 @@ function maker(content) {
     return allLines.map(v => {
         const items = v.split(',');
         const fileName = `@/compose-${items[0]}.txt`
-        return {
-            [fileName]: `${items[1]}`
-        }
+        // this will work: return {[fileName]: `${items[1]}`};
+        return [fileName, `${items[1]}`]
     })
+    // you can directly return path-content pairs
+    // return allLines.reduce((q,w)=>({...q, [[your operation]]}), {})
 }
 
 maker.compose = true;
