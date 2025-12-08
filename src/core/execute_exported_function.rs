@@ -1,5 +1,5 @@
 use crate::core::call_func::call_function;
-use crate::core::data_struct::{SuccessResult, FailureResult};
+use crate::core::data_struct::{SuccessResult, FailureResult, Config};
 use crate::core::find_exported_functions::find_exported_functions;
 use boa_engine::{Context, Source};
 use std::path::PathBuf;
@@ -11,6 +11,7 @@ pub fn execute_exported_functions(
     js_code: &str,
     content: &str,
     js_file_str: &str,
+    generation_config: &Config
 ) -> Result<(Vec<SuccessResult>, Vec<FailureResult>), String> {
     // Create JavaScript context
     let mut context = Context::default();
@@ -33,6 +34,10 @@ pub fn execute_exported_functions(
     // Store the temporary parent dir
     let current_path = PathBuf::from(js_file_str);
     let current_path_dir = current_path.parent().unwrap();
+
+    let path_alias = generation_config.alias.clone().unwrap();
+
+    println!("config here {:?}", path_alias);
 
     // Call each exported function with the content
     for func_item in exported_functions {

@@ -5,6 +5,7 @@ use crate::core::execute_exported_function::execute_exported_functions;
 use crate::core::print_console::{print_content_required, print_js_required};
 use clap::Parser;
 use std::fs;
+use crate::core::load_config_file::load_config_from_file;
 
 /// JavaScript Function Evaluator - Execute exported functions with content from fil
 
@@ -60,9 +61,11 @@ fn main() {
             std::process::exit(1);
         }
     };
+    
+    let generation_config = load_config_from_file();
 
     // Execute exported functions
-    match execute_exported_functions(&js_code, &content, &js_file_str) {
+    match execute_exported_functions(&js_code, &content, &js_file_str, &generation_config) {
         Ok(results) => {
             let (success_results, failure_results) = results;
             if success_results.len() + failure_results.len() == 0 {

@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use clap::Parser;
+use serde::Deserialize;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -19,6 +21,12 @@ pub struct Args {
 pub struct SuccessResult {
     pub name: String,
     pub path: String,
+}
+
+// 定义与JSON结构匹配的结构体
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    pub alias: Option<HashMap<String, String>>, 
 }
 
 #[derive(Debug)]
