@@ -1,5 +1,5 @@
-use crate::core::data_struct::Config;
-use crate::core::normalize_path::normalize_path;
+use crate::core::data_hold::data_struct::Config;
+use crate::core::fs_handles::normalize_path::normalize_path;
 use std::fs;
 use std::path::PathBuf;
 

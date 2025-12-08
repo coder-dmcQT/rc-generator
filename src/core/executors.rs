@@ -1,13 +1,12 @@
-use crate::core::call_func::call_function;
-use crate::core::data_struct::{SuccessResult, FailureResult, Config};
-use crate::core::find_exported_functions::find_exported_functions;
+use crate::core::boa_js_specific::call_func::call_function;
+use crate::core::data_hold::data_struct::{SuccessResult, FailureResult, Config};
+use crate::core::functions_handles::find_exported_functions::{find_composed_functions, find_exported_functions};
 use boa_engine::{Context, Source};
 use std::path::PathBuf;
-use crate::core::normalize_path::normalize_path;
-use crate::core::handle_file::handle_file;
-use crate::core::replace_prefix_or_not::replace_prefix_longest;
+use crate::core::fs_handles::normalize_path::normalize_path;
+use crate::core::fs_handles::handle_file::handle_file;
+use crate::core::fs_handles::replace_prefix_or_not::replace_prefix_longest;
 
-/// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
     js_code: &str,
     content: &str,
@@ -22,13 +21,16 @@ pub fn execute_exported_functions(
         .eval(Source::from_bytes(js_code))
         .map_err(|e| format!("Failed to evaluate JavaScript: {}", e))?;
 
-    // Find all functions with "export_" prefix
+    // Find all functions with "path" property
     let exported_functions = find_exported_functions(&mut context)?;
+
+    // Find all compose functions with "compose" property
+    let composed_functions = find_composed_functions(&mut context)?;
 
     let mut successes = Vec::new();
     let mut failures = Vec::new();
 
-    if exported_functions.is_empty() {
+    if exported_functions.is_empty() && composed_functions.is_empty() {
         return Ok((successes, failures));
     }
 
@@ -69,6 +71,9 @@ pub fn execute_exported_functions(
             }
         };
     }
+
+    // Handle the compose function calls
+
 
     Ok((successes, failures))
 }

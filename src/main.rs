@@ -1,11 +1,11 @@
 pub(crate) mod core;
 
-use crate::core::data_struct::Args;
-use crate::core::execute_exported_function::execute_exported_functions;
-use crate::core::print_console::{print_content_required, print_js_required};
+use self::core::data_hold::data_struct::Args;
+use crate::core::executors::execute_exported_functions;
+use self::core::fs_handles::load_config_file::load_config_from_file;
+use self::core::console_print::print_console::{print_content_required, print_js_required};
 use clap::Parser;
 use std::fs;
-use crate::core::load_config_file::load_config_from_file;
 
 /// JavaScript Function Evaluator - Execute exported functions with content from fil
 
@@ -61,7 +61,7 @@ fn main() {
             std::process::exit(1);
         }
     };
-    
+
     let generation_config = load_config_from_file();
 
     // Execute exported functions

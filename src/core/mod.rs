@@ -1,10 +1,6 @@
-pub mod print_console;
-pub mod data_struct;
-pub mod find_exported_functions;
-pub mod call_func;
-pub mod execute_exported_function;
-pub mod built_in_filter;
-pub mod normalize_path;
-pub mod handle_file;
-pub mod load_config_file;
-pub mod replace_prefix_or_not;
+pub mod executors;
+mod boa_js_specific;
+pub(crate) mod data_hold;
+pub(crate) mod fs_handles;
+pub(crate) mod console_print;
+mod functions_handles;

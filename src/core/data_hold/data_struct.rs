@@ -23,6 +23,14 @@ pub struct SuccessResult {
     pub path: String,
 }
 
+/// Enhanced function result with type information
+#[derive(Debug)]
+pub enum FunctionReturnType {
+    Array2D(Vec<(String, String)>),  // 2D array: [["k1","v1"], ["k2","v2"]]
+    Object(Vec<(String, String)>),   // Object: {k1: "v1", k2: "v2"}
+    String(String),                   // Everything else converted to string (JS way)
+}
+
 // 定义与JSON结构匹配的结构体
 #[derive(Debug, Deserialize)]
 pub struct Config {
