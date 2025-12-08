@@ -8,9 +8,9 @@ use std::path::{Path, PathBuf};
 pub fn from_js_value_to_path_string(
     path_alias: &HashMap<String, String>,
     current_path: &Path,
-    keyPath: JsValue,
+    key_path: JsValue,
 ) -> String {
-    let key_extracted = extract_string(&keyPath);
+    let key_extracted = extract_string(&key_path);
     let key_str = match replace_prefix_longest(&*key_extracted, path_alias) {
         Ok(path) => PathBuf::from(path),
         Err(_) => current_path.join(key_extracted),
@@ -21,11 +21,11 @@ pub fn from_js_value_to_path_string(
 pub fn from_string_to_path_string(
     path_alias: &HashMap<String, String>,
     current_path: &Path,
-    keyPath: String,
+    key_path: String,
 ) -> String {
-    let key_str = match replace_prefix_longest(&*keyPath, path_alias) {
+    let key_str = match replace_prefix_longest(&*key_path, path_alias) {
         Ok(path) => PathBuf::from(path),
-        Err(_) => current_path.join(keyPath),
+        Err(_) => current_path.join(key_path),
     };
     normalize_path(&key_str).to_string_lossy().to_string()
 }

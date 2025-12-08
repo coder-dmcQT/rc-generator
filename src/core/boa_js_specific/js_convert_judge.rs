@@ -34,7 +34,7 @@ pub(crate) fn is_array(context: &mut Context, value: &JsValue) -> bool {
 }
 
 /// Convert JsValue to String the JavaScript way (using toString())
-pub(crate) fn js_value_to_string(context: &mut Context, value: &JsValue) -> String {
+pub(crate) fn js_value_to_string(value: &JsValue) -> String {
     // For strings, extract without quotes
     if value.is_string() {
         return value

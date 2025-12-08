@@ -10,9 +10,8 @@ use crate::core::functions_handles::find_exported_functions::{
     find_composed_functions, find_exported_functions,
 };
 use crate::core::functions_handles::make_uuid_for_path_not::make_uuid_for_path_not;
-use crate::core::functions_handles::write_fs_kv_pairs::{write_fs_path_content_paris, write_pairs};
+use crate::core::functions_handles::write_fs_kv_pairs::write_pairs;
 use boa_engine::{Context, Source};
-use std::io::Error;
 use std::path::PathBuf;
 
 pub fn execute_exported_functions(

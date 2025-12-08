@@ -56,7 +56,7 @@ fn classify_result(
         parse_object(context, result, path_alias, current_path)
     } else {
         // Convert everything else to string (JavaScript way)
-        let value = js_value_to_string(context, result);
+        let value = js_value_to_string(result);
         Ok(FunctionReturnType::String(value))
     }
 }
