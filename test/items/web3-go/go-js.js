@@ -211,4 +211,4 @@ func transferERC20(contract *bind.BoundContract, toAddr string, amount *big.Int)
     `
 }
 
-make_out.path = '../../output/web3-go/simple.go'
+make_out.path = '@/simple.go'

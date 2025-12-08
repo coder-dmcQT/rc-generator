@@ -5,6 +5,7 @@ use boa_engine::{Context, Source};
 use std::path::PathBuf;
 use crate::core::normalize_path::normalize_path;
 use crate::core::handle_file::handle_file;
+use crate::core::replace_prefix_or_not::replace_prefix_longest;
 
 /// Execute all functions prefixed with "export_" using content as parameter
 pub fn execute_exported_functions(
@@ -43,7 +44,11 @@ pub fn execute_exported_functions(
     for func_item in exported_functions {
         let function_name = func_item.function_name;
         let target_path =  {
-            normalize_path(&current_path_dir.join(func_item.path))
+            let path = match replace_prefix_longest(func_item.path.as_str(), &path_alias) {
+                Ok(path) => PathBuf::from(path),
+                Err(_) => current_path_dir.join(func_item.path),
+            };
+            normalize_path(&*path)
                 .to_string_lossy()
                 .to_string()
         };
