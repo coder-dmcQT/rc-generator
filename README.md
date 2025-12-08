@@ -4,7 +4,7 @@ A blazingly fast, cross-platform low-code generation tool built entirely with Ru
 
 ## ✨ Core Highlights
 - ✅ **Rust-Powered Performance**: Leverages Rust's zero-cost abstractions and async runtime for sub-millisecond template parsing and code generation
-- ✅ **Cross-Platform Compatibility**: Builds for Linux, macOS, Windows, and embedded targets (ARM/RISC-V) with minimal binary size (< 2MB)
+- ✅ **Cross-Platform Compatibility**: Builds for Linux, macOS, Windows, and embedded targets (ARM/RISC-V) with minimal binary size (4 2MB)
 - ✅ **Custom Template Syntax**: Users define shorthand templates (any file extension) and JavaScript parsers to transform them into desired output
 - ✅ **Flexible JS Function Model**: Single-file (path-bound) and multi-file (composed) JavaScript functions with explicit output path configuration
 - ✅ **Alias Configuration**: Vite-like `rc.config.json` alias system for simplified path management in complex projects
@@ -167,7 +167,6 @@ The result is a production-ready tool that empowers users to define their own te
 | serde          | Serialization/deserialization for config files and data handling |
 | serde_json     | JSON parsing for `rc.config.json` and runtime data |
 | uuid           | UUID v4 generation (with fast-rng feature) |
-| walkdir        | Optional recursive filesystem traversal for batch template processing |
 
 ---
 
