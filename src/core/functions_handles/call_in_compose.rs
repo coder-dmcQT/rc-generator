@@ -1,15 +1,21 @@
+use crate::core::boa_js_specific::js_convert_judge::{
+    extract_string, is_array, js_value_to_string,
+};
 use crate::core::data_hold::data_struct::FunctionReturnType;
+use crate::core::functions_handles::from_key_to_fs_path::{
+    from_js_value_to_path_string, from_string_to_path_string,
+};
 use boa_engine::{Context, JsString, JsValue};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use crate::core::boa_js_specific::js_convert_judge::{extract_string, is_array, js_value_to_string};
+use std::path::Path;
 
+/// Call function if it's composed, normalize and modify function returns for fs writing
 pub fn call_function_typed(
     context: &mut Context,
     func_name: &str,
     content: &str,
     path_alias: &HashMap<String, String>,
-    current_path: &PathBuf,
+    current_path: &Path,
 ) -> Result<FunctionReturnType, String> {
     let global = context.global_object();
     let func_key = JsString::from(func_name);
@@ -39,15 +45,15 @@ fn classify_result(
     context: &mut Context,
     result: &JsValue,
     path_alias: &HashMap<String, String>,
-    current_path: &PathBuf,
+    current_path: &Path,
 ) -> Result<FunctionReturnType, String> {
     // Check if it's an array using Array.isArray()
     if is_array(context, result) {
         // Parse as 2D array
-        parse_2d_array(context, result)
+        parse_2d_array(context, result, path_alias, current_path)
     } else if result.is_object() && !result.is_null() {
         // Parse as object
-        parse_object(context, result)
+        parse_object(context, result, path_alias, current_path)
     } else {
         // Convert everything else to string (JavaScript way)
         let value = js_value_to_string(context, result);
@@ -56,7 +62,12 @@ fn classify_result(
 }
 
 /// Parse 2D array: [[string, string], [string, string], ...] OR [{k:v}, {k:v}, ...] OR Mixed
-fn parse_2d_array(context: &mut Context, array: &JsValue) -> Result<FunctionReturnType, String> {
+fn parse_2d_array(
+    context: &mut Context,
+    array: &JsValue,
+    path_alias: &HashMap<String, String>,
+    current_path: &Path,
+) -> Result<FunctionReturnType, String> {
     let array_obj = array.as_object().ok_or("Not an array object")?;
 
     // Get array length
@@ -85,10 +96,10 @@ fn parse_2d_array(context: &mut Context, array: &JsValue) -> Result<FunctionRetu
                 .get(JsString::from("1"), context)
                 .map_err(|e| format!("Failed to get value at index {}: {}", i, e))?;
 
-            let key_str = extract_string(&key);
+            let input_key = from_js_value_to_path_string(path_alias, current_path, key);
             let value_str = extract_string(&value);
 
-            result.push((key_str, value_str));
+            result.push((input_key, value_str));
         }
         // Check if item is an object
         else if item.is_object() && !item.is_null() {
@@ -111,8 +122,10 @@ fn parse_2d_array(context: &mut Context, array: &JsValue) -> Result<FunctionRetu
                     .get(key, context)
                     .map_err(|e| format!("Failed to get value for key {}: {}", key_name, e))?;
 
+                let key_input = from_string_to_path_string(path_alias, current_path, key_name);
+
                 let value_str = extract_string(&value);
-                result.push((key_name, value_str));
+                result.push((key_input, value_str));
             }
         } else {
             return Err(format!("Item {} is neither an array nor an object", i));
@@ -123,7 +136,12 @@ fn parse_2d_array(context: &mut Context, array: &JsValue) -> Result<FunctionRetu
 }
 
 /// Parse object into key-value pairs
-fn parse_object(context: &mut Context, obj: &JsValue) -> Result<FunctionReturnType, String> {
+fn parse_object(
+    context: &mut Context,
+    obj: &JsValue,
+    path_alias: &HashMap<String, String>,
+    current_path: &Path,
+) -> Result<FunctionReturnType, String> {
     let obj_ref = obj.as_object().ok_or("Not an object")?;
 
     let keys = obj_ref
@@ -144,9 +162,10 @@ fn parse_object(context: &mut Context, obj: &JsValue) -> Result<FunctionReturnTy
             .map_err(|e| format!("Failed to get value: {}", e))?;
 
         let value_str = extract_string(&value);
-        result.push((key_name, value_str));
+        let key_input = from_string_to_path_string(path_alias, current_path, key_name);
+
+        result.push((key_input, value_str));
     }
 
     Ok(FunctionReturnType::Object(result))
 }
-
