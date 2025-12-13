@@ -97,7 +97,7 @@ A `rc.config.json` file enables Vite-like path aliasing for simplified project s
 git clone <your-repo-url>
 cd rust-lowcode-generator
 
-# Build (produces a <2MB binary named js_evaluator)
+# Build (produces a <4MB binary named js_evaluator)
 cargo build --release
 
 # Run with a parser and template file
@@ -130,7 +130,7 @@ cargo build --release
    Generates `./src/app.rs` and `./src/app.go` with the specified content.
 
 ## 📊 Performance Metrics
-- **Binary Size**: ~1.8MB (release build with optimizations and stripped symbols)
+- **Binary Size**: <4MB (release build with optimizations and stripped symbols)
 - **Memory Usage**: < 0.03% of system memory (on 16GB RAM Linux) for template parsing and generation
 - **JS Execution**: Parses and executes user-defined JS functions in < 10ms (Boa engine optimized for small scripts)
 - **File Generation**: Writes 100+ files to disk in < 50ms (synchronous I/O with batch processing)
