@@ -1,0 +1,77 @@
+{
+  "Prefix": "com.university.student",
+  "domain": [
+    {
+      "name": "Student",
+      "table_name": "students",
+      "fields": {
+        "id": {
+          "type": "Long"
+        },
+        "studentId": {
+          "type": "String",
+          "nullable": false,
+          "length": 15,
+          "unique": true,
+          "validation": {
+            "NotNull": {
+              "message": "Student ID is required (format: 2024XXX)"
+            },
+            "Size": {
+              "min": 8,
+              "max": 15,
+              "message": "Student ID must be 8-15 characters"
+            }
+          }
+        },
+        "fullName": {
+          "type": "String",
+          "nullable": false,
+          "length": 15,
+          "validation": {
+            "NotBlank": {
+              "message": "University email is required"
+            },
+            "Size": {
+              "max": 60,
+              "message": "Full name cannot exceed 60 characters"
+            }
+          }
+        },
+        "email": {
+          "type": "String",
+          "nullable": false,
+          "unique": true,
+          "length": 100,
+          "validation": {
+            "NotBlank": {
+              "message": "University email is required"
+            },
+            "Email": {
+              "message": "Invalid email format (e.g., name@westernu.edu)"
+            }
+          }
+        },
+        "major": {
+          "type": "String",
+          "length": 30,
+          "validation": {
+            "Size": {
+              "max": 30,
+              "message": "Major cannot exceed 30 characters"
+            }
+          }
+        },
+        "location": {
+          "type": "String",
+          "length": 100,
+          "validation": {
+            "NotBlank": {
+              "message": "Family location is required"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
