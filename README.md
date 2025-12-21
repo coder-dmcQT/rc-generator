@@ -129,6 +129,12 @@ cargo build --release
    ```
    Generates `./src/app.rs` and `./src/app.go` with the specified content.
 
+### Complex Workflow (Cross-Language Project Generations):
+
+- **Shorten Syntax You defined in _./test/items/java-react/shorts.json_**
+- **Bunches of Essential Java SpringBoot App files generated in _./test/items/output/java-react/java_ folders**
+- **Bunches of Essential React+Typescript Scaffold files are generated in _./test/items/output/java-react/react_**
+
 ## 📊 Performance Metrics
 - **Binary Size**: <4MB (release build with optimizations and stripped symbols)
 - **Memory Usage**: < 0.03% of system memory (on 16GB RAM Linux) for template parsing and generation
@@ -155,7 +161,6 @@ This tool is built with a **minimalist, purpose-driven architecture** focused on
 - All critical logic (memory management, filesystem operations, JS engine integration) is validated via Rust's borrow checker and unit tests
 - The CLI is designed to be intuitive for both beginners and advanced users, with verbose mode for debugging template parsing
 - Planned features (UI, binary compilation) are designed as optional modules to keep the core lightweight and fast
-- Even highly abstracted metadata (e.g., Java Spring Boot entity class definitions) can be used to fully reconstruct all associated repository, DTO, controller, and test classes—an example of this will be added in future updates
 
 The result is a production-ready tool that empowers users to define their own template syntax and parsing logic, making it suitable for custom code generation workflows, project scaffolding, and shorthand-to-code transformations.
 

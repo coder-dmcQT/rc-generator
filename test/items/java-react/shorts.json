@@ -14,7 +14,7 @@
           "length": 15,
           "unique": true,
           "validation": {
-            "NotNull": {
+            "NotBlank": {
               "message": "Student ID is required (format: 2024XXX)"
             },
             "Size": {

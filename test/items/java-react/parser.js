@@ -513,3 +513,442 @@ function generate(json_content) {
 }
 
 generate.compose = true;
+
+function makeTypesContent(domainItem) {
+    const interfaceDefined = [
+        `export interface ${domainItem.name} {`
+    ];
+
+    const requestDefined  = [
+      `export interface ${domainItem.name}CreateRequest {`
+    ];
+
+    const filterParams = [
+      `export interface ${domainItem.name}FilterParams {`,
+
+    ];
+    for (const field_key in domainItem.fields) {
+        const field_config = domainItem.fields[field_key];
+        if (field_key === 'id') {
+            interfaceDefined.push(`id: number;`)
+            requestDefined.push(`id: number;`)
+        } else {
+            let field_content = `${field_key}:`
+            if (['Long'].includes(field_config.type)) {
+                field_content += 'number'
+            } else {
+                field_content += 'string';
+            }
+            if (!field_config.nullable) {
+                field_content += '| null;'
+            } else {
+                field_content += ';'
+            }
+            interfaceDefined.push(field_content)
+            requestDefined.push(field_content)
+            if (field_config.unique) {
+                filterParams.push(field_content);
+            }
+        }
+    }
+
+    requestDefined.push('}')
+    interfaceDefined.push('}')
+    filterParams.push('}')
+
+    const apiRespDefined = [
+        `export interface ApiResponse<T>{`,
+        `code: number;`,
+        `message: string;`,
+        `data: T;`,
+        `}`
+    ];
+    return interfaceDefined.concat(requestDefined, filterParams, apiRespDefined).join('\r\n')
+}
+
+function makeAPIClient() {
+    return `
+    import axios, { AxiosError, AxiosResponse } from 'axios';
+
+const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => response.data,
+  (error: AxiosError) => {
+    const errorMessage = error.response?.data?.message || 'Failed to connect to server';
+    console.error('API Error:', errorMessage);
+    return Promise.reject(new Error(errorMessage));
+  }
+);
+
+export default apiClient;
+    `
+}
+
+function makeApiServiceItem(item) {
+    const importHeader = [
+        `import apiClient from "./apiClient"`,
+        `import {${item.name}, ${item.name}CreateRequest, ${item.name}FilterParams} from "../types/${item.name}.types"`
+    ]
+
+    const serviceContent = [
+        `export const ${toSnake(item.name)}Service = {`,
+        `get${item.name}s: (params?: ${item.name}FilterParams): Promise<${item.name}[]> => {`,
+        `return apiClient.get('/${toSnake(item.name)}', {params});`,'},',
+        `get${item.name}ById: (id: number): Promise<${item.name}> => {`,
+        `return apiClient.get(\`/${toSnake(item.name)}/\${id}\`);`,'},',
+        `create${item.name}: (${toSnake(item.name)}: ${item.name}CreateRequest): Promise<${item.name}> => {`,
+        `return apiClient.post('/${toSnake(item.name)}', student);`,'},',
+        `update${item.name}: (id: number, ${toSnake(item.name)}: ${item.name}CreateRequest): Promise<${item.name}> => {`,
+        `return apiClient.put(\`/${toSnake(item.name)}/\${id}\`, ${toSnake(item.name)})`, "},",
+        `delete${item.name}: (id: number): Promise<void> => {`,
+        `return apiClient.delete(\`/${toSnake(item.name)}/\${id}\`);`, '},'
+    ]
+
+    serviceContent.push("}")
+
+    return importHeader.concat(serviceContent).join('\r\n')
+}
+
+function makeHooksItem(item) {
+    return `
+    import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ${toSnake(item.name)}Service } from '../services/${toSnake(item.name)}Service';
+import { ${item.name}, ${item.name}CreateRequest, ${item.name}FilterParams } from '../types/${(item.name)}.types';
+
+export const use${item.name}Api = () => {
+  const queryClient = useQueryClient();
+
+  const useGet${item.name}s = (params?: ${item.name}FilterParams) => {
+    return useQuery({
+      queryKey: ['${toSnake(item.name)}s', params],
+      queryFn: () => ${toSnake(item.name)}Service.get${item.name}s(params),
+    });
+  };
+
+  const useGet${item.name}ById = (id: number) => {
+    return useQuery({
+      queryKey: ['${toSnake(item.name)}', id],
+      queryFn: () => ${toSnake(item.name)}Service.get${item.name}ById(id),
+      enabled: !!id, 
+    });
+  };
+
+  const useCreate${item.name} = () => {
+    return useMutation({
+      mutationFn: (${toSnake(item.name)}: ${item.name}CreateRequest) => ${toSnake(item.name)}Service.create${item.name}(${toSnake(item.name)}),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['${toSnake(item.name)}s'] }); // 刷新列表
+      },
+    });
+  };
+
+  const useUpdate${item.name} = () => {
+    return useMutation({
+      mutationFn: ({ id, ${toSnake(item.name)} }: { id: number; ${toSnake(item.name)}: ${item.name}CreateRequest }) => 
+        ${toSnake(item.name)}Service.update${item.name}(id, ${toSnake(item.name)}),
+      onSuccess: (_, { id }) => {
+        queryClient.invalidateQueries({ queryKey: ['${toSnake(item.name)}s'] });
+        queryClient.invalidateQueries({ queryKey: ['${toSnake(item.name)}', id] });
+      },
+    });
+  };
+
+  const useDelete${item.name} = () => {
+    return useMutation({
+      mutationFn: (id: number) => ${toSnake(item.name)}Service.delete${item.name}(id),
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['${toSnake(item.name)}s'] });
+      },
+    });
+  };
+
+  return {
+    useGet${item.name}s,
+    useGet${item.name}ById,
+    useCreate${item.name},
+    useUpdate${item.name},
+    useDelete${item.name},
+  };
+};
+    `
+}
+
+function makeListItemRe(item) {
+    return `
+import React from 'react';
+import { Box, Table, TableBody, TableCell, TableHead, TableRow, Button, Typography } from '@mui/material';
+// Material UI是西方团队主流UI库（替代AntD）
+import { ${item.name} } from '../../../types/${(item.name)}.types';
+import { use${item.name}Api } from '../../../hooks/use${item.name}Api';
+
+// 组件Props类型（西方团队强制定义）
+interface ${item.name}ListProps {
+  filterParams?: Record<string, string>;
+  onEdit: (${toSnake(item.name)}: ${item.name}) => void;
+  onView: (${toSnake(item.name)}: ${item.name}) => void;
+}
+
+const ${item.name}List: React.FC<${item.name}ListProps> = ({ filterParams, onEdit, onView }) => {
+  const { useGet${item.name}s, useDelete${item.name} } = use${item.name}Api();
+  const { data: ${toSnake(item.name)}s = [], isLoading, error } = useGet${item.name}s(filterParams);
+  const { mutate: delete${item.name}, isPending: isDeleting } = useDelete${item.name}();
+
+  // 处理删除（西方团队强调确认提示）
+  const handleDelete = (id: number) => {
+    if (confirm('Are you sure you want to delete this ${item.name}?')) { // 西方风格确认语
+      delete${item.name}(id);
+    }
+  };
+
+  if (isLoading) return <Typography>Loading ${toSnake(item.name)}s...</Typography>;
+  if (error) return <Typography color="error">Error: {(error as Error).message}</Typography>;
+
+  return (
+    <Box sx={{ mt: 2 }}>
+      <Table>
+        <TableHead>
+          <TableRow>
+          ${Object.keys(item.fields).map(v => `<TableCell>${v}</TableCell>`).join('\r\n')}
+            
+            <TableCell>Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {${toSnake(item.name)}s.map((${toSnake(item.name)}) => (
+            <TableRow key={${toSnake(item.name)}.id}>
+              ${Object.keys(item.fields).map(v => `<TableCell>{${toSnake(item.name)}.${v}}</TableCell>`).join('\r\n')}
+              <TableCell>
+                <Button 
+                  variant="outlined" 
+                  size="small" 
+                  onClick={() => onView(${toSnake(item.name)})}
+                  sx={{ mr: 1 }}
+                >
+                  View
+                </Button>
+                <Button 
+                  variant="contained" 
+                  size="small" 
+                  onClick={() => onEdit(${toSnake(item.name)})}
+                  sx={{ mr: 1 }}
+                >
+                  Edit
+                </Button>
+                <Button 
+                  variant="contained" 
+                  color="error" 
+                  size="small" 
+                  onClick={() => handleDelete(${toSnake(item.name)}.id)}
+                  disabled={isDeleting}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+      {${toSnake(item.name)}s.length === 0 && (
+        <Typography sx={{ mt: 2 }}>No ${toSnake(item.name)}s found.</Typography>
+      )}
+    </Box>
+  );
+};
+
+export default ${item.name}List;
+    `
+}
+
+function makeSingleFormItemField(item, key) {
+    if (key === 'id') return ''
+    const blockAll = [
+        `<Grid item xs={12}>`,
+        `<TextField`,
+        `label="${key}"`
+    ]
+    const validation = item[key].validation
+    if (validation) {
+        if ('Email' in validation) {
+            blockAll.push(`type="email"`)
+        }
+        blockAll.push(`{...register('${key}', {`)
+        if ("NotBlank" in validation) {
+            blockAll.push(`required: '${validation.NotBlank.message}',`)
+        }
+        if ("Size" in validation) {
+            if (validation.Size.max) {
+                blockAll.push(`maxLength: {value: ${validation.Size.max}, message: '${validation.Size.message}'},`)
+            } else if (validation.Size.min) {
+                blockAll.push(`minLength: {value: ${validation.Size.min}, message: '${validation.Size.message}'},`)
+            }
+        }
+        blockAll.push(`})}`)
+    }
+    if (validation.NotBlank) {
+        blockAll.push(`error={!!errors.${key}}`)
+    }
+
+    blockAll.push(`/>`,`</Grid>`)
+    return blockAll.join('\r\n')
+}
+
+function makeFormItem(item) {
+    return `
+    import React from 'react';
+import { Box, TextField, Button, Grid, Typography } from '@mui/material';
+import { useForm } from 'react-hook-form'; // 西方团队主流表单库
+import { ${item.name}, ${item.name}CreateRequest } from '../../../types/${toSnake(item.name)}.types';
+
+interface ${item.name}FormProps {
+  initialData?: Partial<${item.name}>; // 编辑时传初始值
+  onSubmit: (${toSnake(item.name)}: ${item.name}CreateRequest) => void;
+  isSubmitting: boolean;
+}
+
+const ${item.name}Form: React.FC<${item.name}FormProps> = ({ initialData, onSubmit, isSubmitting }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm<${item.name}CreateRequest>({
+    defaultValues: initialData || {
+      ${Object.keys(item.fields).map(v => `${v}:''`).join(',')}
+    },
+  });
+
+  return (
+    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
+      <Grid container spacing={2}>
+      ${Object.keys(item.fields).map(v => makeSingleFormItemField(item.fields, v)).join('\r\n')}
+        <Grid item xs={12}>
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Submitting...' : initialData ? 'Update ${item.name}' : 'Create ${item.name}'}
+          </Button>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+};
+
+export default ${item.name}Form;
+    `
+}
+
+function makePageCombined(item) {
+    return `
+    import React, { useState } from 'react';
+import { Box, Typography, Tabs, Tab } from '@mui/material';
+import ${item.name}List from '../../components/${toSnake(item.name)}/${item.name}List/${item.name}List';
+import ${item.name}Form from '../../components/${toSnake(item.name)}/${item.name}Form/${item.name}Form';
+import { use${item.name}Api } from '../../hooks/use${item.name}Api';
+import { ${item.name}, ${item.name}CreateRequest } from '../../types/${item.name}.types';
+
+const ${item.name}Page: React.FC = () => {
+  const [activeTab, setActiveTab] = useState(0);
+  const [editing${item.name}, setEditing${item.name}] = useState<${item.name} | null>(null);
+  const { useCreate${item.name}, useUpdate${item.name} } = use${item.name}Api();
+  const { mutate: create${item.name}, isPending: isCreating } = useCreate${item.name}();
+  const { mutate: update${item.name}, isPending: isUpdating } = useUpdate${item.name}();
+
+  // 处理表单提交（新增/编辑）
+  const handleFormSubmit = (student: ${item.name}CreateRequest) => {
+    if (editing${item.name}) {
+      update${item.name}({ id: editing${item.name}.id, ${toSnake(item.name)} });
+    } else {
+      create${item.name}(${toSnake(item.name)});
+    }
+    setActiveTab(0); // 提交后切回列表
+    setEditing${item.name}(null); // 清空编辑状态
+  };
+
+  // 处理编辑
+  const handleEdit = (${toSnake(item.name)}: ${item.name}) => {
+    setEditing${item.name}(${toSnake(item.name)});
+    setActiveTab(1);
+  };
+
+  // 处理查看
+  const handleView = (${toSnake(item.name)}: ${item.name}) => {
+    // 跳转到详情页（React Router）
+    window.location.href = \`/${toSnake(item.name)}/\${${toSnake(item.name)}.id}\`;
+  };
+
+  return (
+    <Box sx={{ p: 3, maxWidth: 1200, margin: '0 auto' }}>
+      <Typography variant="h4" gutterBottom>
+        ${item.name} Management
+      </Typography>
+      <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)} sx={{ mb: 2 }}>
+        <Tab label="${item.name} List" />
+        <Tab label={editing${item.name} ? 'Edit ${item.name}' : 'Add ${item.name}'} />
+      </Tabs>
+      {activeTab === 0 && (
+        <${item.name}List 
+          onEdit={handleEdit} 
+          onView={handleView} 
+        />
+      )}
+      {activeTab === 1 && (
+        <${item.name}Form
+          initialData={editing${item.name}}
+          onSubmit={handleFormSubmit}
+          isSubmitting={isCreating || isUpdating}
+        />
+      )}
+    </Box>
+  );
+};
+
+export default ${item.name}Page;
+    `
+}
+
+function react_make(json_content) {
+    const json = JSON.parse(json_content);
+    const result = [];
+
+    json.domain.forEach(item => {
+        result.push({
+            [`@/react/src/types/${item.name}.types.ts`]: makeTypesContent(item)
+        });
+
+        result.push({
+            [`@/react/src/services/${item.name}Service.ts`]: makeApiServiceItem(item)
+        });
+
+        result.push({
+            [`@/react/src/hooks/use${item.name}Api.ts`]: makeHooksItem(item)
+        });
+
+        result.push({
+            [`@/react/src/components/${toSnake(item.name)}/${item.name}List/${item.name}List.tsx`]: makeListItemRe(item)
+        });
+
+        result.push({
+            [`@/react/src/components/${toSnake(item.name)}/${item.name}Form/${item.name}Form.tsx`]: makeFormItem(item)
+        })
+
+        result.push({
+            [`@/react/src/pages/${item.name}/${item.name}Page.tsx`]: makePageCombined(item)
+        })
+    });
+
+    // 单独添加 apiClient（仅执行一次）
+    result.push({
+        '@/react/src/services/apiClient.ts': makeAPIClient()
+    });
+
+    return result;
+}
+
+react_make.compose = true;
